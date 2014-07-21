@@ -409,7 +409,7 @@ if __name__ == '__main__':
 		svn_operation = BUILTIN_ALIASES[svn_operation]
 
 	# unresolvable ? print error
-	if svn_operation not in BUILTIN_ALIASES.values():
+	if svn_operation not in AVAILABLE_OPERATIONS + BUILTIN_ALIASES.values():
 		available_ops = BUILTIN_ALIASES.keys() + AVAILABLE_OPERATIONS + user_aliases.options("aliases")
 		sc = SpellCorrecter(available_ops)
 		print_operation_not_found(svn_operation, sc.correct(svn_operation))
