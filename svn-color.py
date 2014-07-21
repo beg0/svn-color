@@ -356,25 +356,37 @@ BUILTIN_ALIASES["cix"] = alias_commitextended
 #
 #BUILTIN_ALIASES["dummy_st"] = alias_dummy_st
 
-#TODO: improve this, svn_operation is not necessaraly the first argument. There may be options arguments before
+#FIXME: this does not handle the case of option with arguments
+#for example: svn --old 1234 --new 12345 diff
 def svn_extract_operation(argv=None):
 	if argv is None:
 		argv = sys.argv
 
-	svn_operation = argv[1]
-	svn_options = sys.argv[2:]
+	if len(argv) < 2:
+		return None,[] 
+
+	svn_operation = None
+	svn_options = argv[1:]
+	for arg in argv[1:]:
+		if not arg.startswith('-'): # not an option argument? says it's the svn operation
+			svn_operation = arg
+			svn_options.remove(svn_operation)
+			break
+
 	return svn_operation, svn_options
 
 def print_operation_not_found(svn_operation, corrections):
 	sys.stderr.write("Unknown subcommand: %s\n" % pipes.quote(svn_operation))
 	sys.stderr.write("Type 'svn help' for usage.\n")
-	sys.stderr.write("\n")
-	if(len(corrections) == 1):
-		sys.stderr.write("Did you mean this?\n")
-	else:
-		sys.stderr.write("Did you mean one of these?\n")
-	for c in corrections:
-		sys.stderr.write("\t" + c + "\n")
+
+	if len(corrections) > 0:
+		sys.stderr.write("\n")
+		if(len(corrections) == 1):
+			sys.stderr.write("Did you mean this?\n")
+		else:
+			sys.stderr.write("Did you mean one of these?\n")
+		for c in corrections:
+			sys.stderr.write("\t" + c + "\n")
 
 if __name__ == '__main__':
 	pager_process = None
@@ -383,8 +395,7 @@ if __name__ == '__main__':
 
 	# No args? let svn handle that
 	if len(sys.argv) < 2 or svn_operation is None:
-		os.execl(SVN_BIN, sys.argv)
-
+		os.execl(SVN_BIN, *sys.argv)
 
 	#read config
 	user_aliases = ConfigParser.ConfigParser()
