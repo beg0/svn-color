@@ -73,6 +73,12 @@ BUILTIN_ALIASES = {
 	'up':		'update',
 }
 
+AVAILABLE_OPERATIONS = [ 'add', 'blame', 'cat', 'changelist', 'checkout', 'cleanup', 'commit', 'copy',
+			 'delete', 'diff', 'export', 'help', 'import', 'info', 'list', 'lock',
+			 'log', 'merge', 'mergeinfo', 'mkdir', 'move', 'patch', 'propdel', 'propedit',
+			 'propget', 'proplist', 'propset', 'relocate', 'resolve', 'resolved', 'revert', 'status',
+			 'switch', 'unlock', 'update', 'upgrade' ]
+ 
 INTERACTIVE_ONLY = ['commit', 'propedit', 'cat', 'copy' ]
 
 
@@ -393,7 +399,7 @@ if __name__ == '__main__':
 
 	# unresolvable ? print error
 	if svn_operation not in BUILTIN_ALIASES.values():
-		available_ops = BUILTIN_ALIASES.keys() + filter(lambda(i): type(i) == str, BUILTIN_ALIASES.values()) + user_aliases.options("aliases")
+		available_ops = BUILTIN_ALIASES.keys() + AVAILABLE_OPERATIONS + user_aliases.options("aliases")
 		sc = SpellCorrecter(available_ops)
 		print_operation_not_found(svn_operation, sc.correct(svn_operation))
 		sys.exit(1)
