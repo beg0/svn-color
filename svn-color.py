@@ -430,7 +430,14 @@ if __name__ == '__main__':
 			pager_path = "pager" # TODO: check it exists
 
 	if pager_path != None and len(pager_path) > 0 and not (svn_operation in INTERACTIVE_ONLY):
-		pager_process = subprocess.Popen(pager_path, stdin=subprocess.PIPE, stdout=sys.stdout, shell=True)
+                #Make sur pager handle colors correctly (and exit if we don't need it)
+                pager_env = os.environ;
+                if not pager_env.has_key("LESS"):
+                    pager_env["LESS"]="FRSX" # quit-if-one-screen, RAW-CONTROL-CHARS, chop-long-lines, no-init
+                if not pager_env.has_key("LV"):
+                    pager_env["LV"]="-c"
+
+		pager_process = subprocess.Popen(pager_path, stdin=subprocess.PIPE, stdout=sys.stdout, shell=True, env=pager_env)
 		svn_output = svn_error = pager_process.stdin
 		svn_options.insert(0,"--non-interactive")
 
