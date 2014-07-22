@@ -432,10 +432,10 @@ if __name__ == '__main__':
 	if pager_path != None and len(pager_path) > 0 and not (svn_operation in INTERACTIVE_ONLY):
                 #Make sur pager handle colors correctly (and exit if we don't need it)
                 pager_env = os.environ;
-                if not pager_env.has_key("LESS"):
+                if not pager_env.has_key("LESS"): # configuration for less (1)
                     pager_env["LESS"]="FRSX" # quit-if-one-screen, RAW-CONTROL-CHARS, chop-long-lines, no-init
-                if not pager_env.has_key("LV"):
-                    pager_env["LV"]="-c"
+                if not pager_env.has_key("LV"): # configuration for lv(1)
+                    pager_env["LV"]="-c" # Allow ANSI escape sequences for text decoration
 
 		pager_process = subprocess.Popen(pager_path, stdin=subprocess.PIPE, stdout=sys.stdout, shell=True, env=pager_env)
 		svn_output = svn_error = pager_process.stdin
