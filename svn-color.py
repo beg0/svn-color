@@ -410,7 +410,11 @@ if __name__ == '__main__':
 
 	# unresolvable ? print error
 	if svn_operation not in AVAILABLE_OPERATIONS + BUILTIN_ALIASES.values():
-		available_ops = BUILTIN_ALIASES.keys() + AVAILABLE_OPERATIONS + user_aliases.options("aliases")
+		available_ops = BUILTIN_ALIASES.keys() + AVAILABLE_OPERATIONS
+
+                if user_aliases.has_section("aliases"):
+                    available_ops += user_aliases.options("aliases")
+
 		sc = SpellCorrecter(available_ops)
 		print_operation_not_found(svn_operation, sc.correct(svn_operation))
 		sys.exit(1)
