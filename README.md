@@ -45,6 +45,12 @@ For example:
 
  $ sudo cp svn-color.py /usr/local/bin && sudo chmod a+x /usr/local/bin/svn-color.py
 
+You can define aliases to svn commandes. For that create a 'aliases' file
+similar to the one provided and put it in your ~/.subversion directory.
+
+For example:
+
+ $ cp aliases ~/.subversion/aliases
 
 Usage
 -----
