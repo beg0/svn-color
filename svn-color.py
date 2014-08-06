@@ -184,6 +184,7 @@ def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args):
 	if err_formater:
 		stderr_dest = subprocess.PIPE
 
+
 	if formater:
 		svn_process=subprocess.Popen(svn_cmd_line, stdout=stdout_dest, stderr=stderr_dest)
 		try:
@@ -258,6 +259,7 @@ def get_current_rev(svn_args):
 	svn_info = StringIO.StringIO()
 
 	#remove "-r 1234" option in command line if any
+        svn_args = list(svn_args)
 	if "-r" in svn_args:
 		option_index = svn_args.index("-r")
 		svn_args.pop(option_index + 1)
@@ -285,7 +287,6 @@ def get_last_changed_rev(svn_args):
 
 # Wrapper around 'update' that also display log since the last update
 def alias_updateverbose(svn_args, svn_output, svn_error, colorize):
-
 	formater = err_formater = noop_formater
 	
 	old_rev = get_current_rev(svn_args)
@@ -294,7 +295,10 @@ def alias_updateverbose(svn_args, svn_output, svn_error, colorize):
 		err_formater = stderr_formater
 		formater = format_status_line
 		
-	run_svn_op(formater, err_formater, svn_output, svn_error, ["update"] + svn_args)
+	ret = run_svn_op(formater, err_formater, svn_output, svn_error, ["update"] + svn_args)
+
+        if ret != 0:
+            return ret
 
 	new_rev = get_current_rev(svn_args)
 	
@@ -312,7 +316,17 @@ def alias_updateverbose(svn_args, svn_output, svn_error, colorize):
 		if colorize:
 			formater = format_log_line
 
-		run_svn_op(formater, err_formater, svn_output, svn_error, ["log", "-v", "-r",rev_request] + svn_args)
+                svn_args_log = list(svn_args)
+                if "-r" in svn_args_log:
+                        option_index = svn_args_log.index("-r")
+                        svn_args_log.pop(option_index + 1)
+                        svn_args_log.pop(option_index)
+
+                svn_args_log = ["log", "-v", "-r",rev_request] + svn_args_log
+
+		ret = run_svn_op(formater, err_formater, svn_output, svn_error, svn_args_log)
+
+        return ret
 
 BUILTIN_ALIASES["updateverbose"] = alias_updateverbose
 BUILTIN_ALIASES["upv"] = alias_updateverbose
