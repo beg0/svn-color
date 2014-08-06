@@ -255,15 +255,21 @@ def run_single_svn_operation(svn_operation, svn_options, svn_output, svn_error, 
 	run_svn_op(formater, err_formater, svn_output, svn_error, svn_args)
 
 
-def get_current_rev(svn_args):
-	svn_info = StringIO.StringIO()
-
-	#remove "-r 1234" option in command line if any
+#remove "-r 1234" option in command line if any
+def _remove_revision_in_args(svn_args):
         svn_args = list(svn_args)
 	if "-r" in svn_args:
 		option_index = svn_args.index("-r")
-		svn_args.pop(option_index + 1)
-		svn_args.pop(option_index)
+                if option_index+1 < len(svn_args):
+                         svn_args.pop(option_index + 1)
+                svn_args.pop(option_index)
+
+        return svn_args
+
+def get_current_rev(svn_args):
+	svn_info = StringIO.StringIO()
+
+        svn_args = _remove_revision_in_args(svn_args)
 
 	run_svn_op(noop_formater, noop_formater, svn_info, None, ["info"] + svn_args)
 
@@ -316,13 +322,7 @@ def alias_updateverbose(svn_args, svn_output, svn_error, colorize):
 		if colorize:
 			formater = format_log_line
 
-                svn_args_log = list(svn_args)
-                if "-r" in svn_args_log:
-                        option_index = svn_args_log.index("-r")
-                        svn_args_log.pop(option_index + 1)
-                        svn_args_log.pop(option_index)
-
-                svn_args_log = ["log", "-v", "-r",rev_request] + svn_args_log
+                svn_args_log = ["log", "-v", "-r",rev_request] + _remove_revision_in_args(svn_args)
 
 		ret = run_svn_op(formater, err_formater, svn_output, svn_error, svn_args_log)
 
