@@ -1,0 +1,15 @@
+# This is an example file for 'aliases' file
+#put that file in your ~/.subversion/ directory
+
+[aliases]
+
+#use "updateverbose" instead of "update" command
+update=updateverbose
+up=upv
+
+# use "extended commit" instead of "commit" command
+commit=commitextended
+ci=cix
+
+#other aliases
+df=diff
