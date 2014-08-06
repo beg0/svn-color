@@ -21,7 +21,7 @@ import getopt
 import subprocess, errno, select
 import re
 import traceback
-import StringIO, pipes
+import StringIO, pipes, shlex
 import ConfigParser
 import collections
 
@@ -389,8 +389,11 @@ def svn_extract_operation(argv=None):
 
 	return svn_operation, svn_options
 
-def print_operation_not_found(svn_operation, corrections):
-	sys.stderr.write("Unknown subcommand: %s\n" % pipes.quote(svn_operation))
+def print_operation_not_found(svn_operation, svn_original_operation, corrections):
+	sys.stderr.write("Unknown subcommand: " +  pipes.quote(svn_operation))
+        if svn_operation != svn_original_operation:
+            sys.stderr.write(" (while resolving %s alias)" % pipes.quote(svn_original_operation))
+        sys.stderr.write("\n")
 	sys.stderr.write("Type 'svn help' for usage.\n")
 
 	if len(corrections) > 0:
@@ -406,6 +409,7 @@ if __name__ == '__main__':
 	pager_process = None
 
 	svn_operation, svn_options = svn_extract_operation(sys.argv)
+        svn_original_operation = svn_operation
 
 	# No args? let svn handle that
 	if len(sys.argv) < 2 or svn_operation is None:
@@ -417,7 +421,21 @@ if __name__ == '__main__':
 
 	#resolve alias
 	if user_aliases.has_option("aliases",svn_operation):
-		svn_operation = user_aliases.get("aliases",svn_operation)
+                alias = user_aliases.get("aliases",svn_operation)
+
+                if alias is None:
+                    sys.stderr.write("Unresolvable alias: %s\n" % pipes.quote(svn_operation))
+                    sys.exit(1)
+
+                alias = shlex.split(alias)
+                new_svn_operation, new_svn_options = svn_extract_operation(['dummy'] + alias)
+
+                if new_svn_operation is None:
+                    sys.stderr.write("Bad alias: %s\n" % pipes.quote(svn_operation))
+                    sys.exit(1)
+
+                svn_operation = new_svn_operation
+                svn_options = svn_options + new_svn_options
 
 	if BUILTIN_ALIASES.has_key(svn_operation):
 		svn_operation = BUILTIN_ALIASES[svn_operation]
@@ -430,7 +448,7 @@ if __name__ == '__main__':
                     available_ops += user_aliases.options("aliases")
 
 		sc = SpellCorrecter(available_ops)
-		print_operation_not_found(svn_operation, sc.correct(svn_operation))
+		print_operation_not_found(svn_operation, svn_original_operation, sc.correct(svn_operation))
 		sys.exit(1)
 
 	#where to send the (formated) output of svn

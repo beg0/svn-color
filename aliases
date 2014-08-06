@@ -13,3 +13,5 @@ ci=cix
 
 #other aliases
 df=diff
+stq=st -q
+logv=log -v
