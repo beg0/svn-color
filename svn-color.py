@@ -356,6 +356,34 @@ def alias_commitextended(svn_args, svn_output, svn_error, colorize):
 BUILTIN_ALIASES["commitextended"] = alias_commitextended
 BUILTIN_ALIASES["cix"] = alias_commitextended
 
+# 'log'+'diff' in a single command
+def alias_logdiff(svn_args, svn_output, svn_error, colorize):
+	formater = err_formater = noop_formater
+	
+	old_rev = get_current_rev(svn_args)
+
+	if colorize:
+		err_formater = stderr_formater
+		formater = format_log_line
+		
+	ret = run_svn_op(formater, err_formater, svn_output, svn_error, ["log"] + svn_args)
+
+        if ret != 0:
+            return ret
+
+        if colorize:
+		err_formater = stderr_formater
+		formater = format_diff_line		
+
+	ret = run_svn_op(formater, err_formater, svn_output, svn_error, ["diff"] + svn_args)
+
+        return ret
+
+BUILTIN_ALIASES["logdiff"] = alias_logdiff
+BUILTIN_ALIASES["ld"] = alias_logdiff
+
+
+
 
 #def alias_dummy_st(svn_args, svn_output, svn_error, colorize):
 #
