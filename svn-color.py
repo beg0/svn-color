@@ -131,7 +131,7 @@ def format_status_line(line):
 		return "\033[1;34m" + line + "\033[m"
 	elif line.startswith("!"):			# missing (!)
 		return "\033[1;31m" + line + "\033[m"
-	elif line.startswith("E"):			# Existed 
+	elif line.startswith("E") and not line.startswith("External at revision"):	# Existed 
 		return "\033[0;31m" + line + "\033[m"
 	elif line.startswith("R"):			# Replaced 
 		return "\033[0;35m" + line + "\033[m"
