@@ -139,9 +139,9 @@ def format_status_line(line):
 		return line
 
 def format_diff_line(line):
-	if line.startswith("+") or line.startswith(">") or line.startswith("--- "): #new
+	if line.startswith("+") or line.startswith(">") or line.startswith("+++ "): #new
 		return  "\033[1;34m" + line + "\033[m"
-	elif line.startswith("-") or line.startswith("<") or line.startswith("*** "): #old
+	elif line.startswith("-") or line.startswith("<") or line.startswith("--- ") or line.startswith("*** "): #old
 		return  "\033[1;31m" + line + "\033[m"
 	elif line.startswith("Only in") or line.startswith("@") or line.startswith("****"): #diff specific
 		return "\033[1;35m" + line + "\033[m"
