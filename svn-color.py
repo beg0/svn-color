@@ -231,7 +231,7 @@ def run_single_svn_operation(svn_operation, svn_options, svn_output, svn_error, 
 	svn_args = [svn_operation] + svn_options
 	if colorize:
 		err_formater = stderr_formater
-		if svn_operation == "status" or svn_operation == "update" or svn_operation == "add" or svn_operation == "delete" or svn_operation == "mkdir" or	svn_operation == "move" or svn_operation == "checkout" or svn_operation == "merge":
+                if svn_operation in [ "status", "update", "add", "delete", "mkdir", "move", "checkout", "merge", "patch" ]:
 			formater = format_status_line
 		elif svn_operation == "diff":
 			if '--summarize' in svn_options:
