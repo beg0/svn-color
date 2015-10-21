@@ -113,30 +113,32 @@ class SpellCorrecter:
 
 # formatter for "status" operation but also "add", "delete", ...
 def format_status_line(line):
-	if line.startswith("?"):			# non version control (?)
-		return "\033[1;34m" + line + "\033[m"
-	elif line.startswith("A") and not line.startswith("At revision"):			# Added
-		return "\033[1;32m" + line + "\033[m"
-	elif line.startswith("C"):			# Conficted
-		return "\033[0;31m" + line + "\033[m"
-	elif line.startswith("D"):			# Deleted
-		return "\033[1;31m" + line + "\033[m"
-	elif line.startswith("I"):			# Ignored
-		return "\033[0;37m" + line + "\033[m"
-	elif line.startswith("M"):			# Modified
-		return "\033[1;33m" + line + "\033[m"
-	elif line.startswith("U") and not line.startswith("Updat"):			# Updated 
-		return "\033[1;33m" + line + "\033[m"
-	elif line.startswith("G"):			# merGed 
-		return "\033[1;34m" + line + "\033[m"
-	elif line.startswith("!"):			# missing (!)
-		return "\033[1;31m" + line + "\033[m"
-	elif line.startswith("E") and not line.startswith("External at revision"):	# Existed 
-		return "\033[0;31m" + line + "\033[m"
-	elif line.startswith("R"):			# Replaced 
-		return "\033[0;35m" + line + "\033[m"
-	else:
-		return line
+	if re.match("^[ ACDIMRX\?!~][ CM][ L][ +][ SX][ K][ C]",line): # is that a "status line"
+		if line.startswith("?"):			# non version control (?)
+			return "\033[1;34m" + line + "\033[m"
+		elif line.startswith("A"):			# Added
+			return "\033[1;32m" + line + "\033[m"
+		elif line.startswith("C"):			# Conficted
+			return "\033[0;31m" + line + "\033[m"
+		elif line.startswith("D"):			# Deleted
+			return "\033[1;31m" + line + "\033[m"
+		elif line.startswith("I"):			# Ignored
+			return "\033[0;37m" + line + "\033[m"
+		elif line.startswith("M"):			# Modified
+			return "\033[1;33m" + line + "\033[m"
+		elif line.startswith("U"):			# Updated
+			return "\033[1;33m" + line + "\033[m"
+		elif line.startswith("G"):			# merGed
+			return "\033[1;34m" + line + "\033[m"
+		elif line.startswith("!"):			# missing (!)
+			return "\033[1;31m" + line + "\033[m"
+		elif line.startswith("E"):			# Existed
+			return "\033[0;31m" + line + "\033[m"
+		elif line.startswith("R"):			# Replaced
+			return "\033[0;35m" + line + "\033[m"
+
+	# fallback: leave as is
+	return line
 
 def format_diff_line(line):
 	if line.startswith("+") or line.startswith(">") or line.startswith("+++ "): #new
