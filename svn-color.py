@@ -112,33 +112,57 @@ class SpellCorrecter:
 
 
 # formatter for "status" operation but also "add", "delete", ...
-def format_status_line(line):
-	if re.match("^[ ACDIMRX\?!~][ CM][ L][ +][ SX][ K][ C]",line): # is that a "status line"
-		if line.startswith("?"):			# non version control (?)
-			return "\033[1;34m" + line + "\033[m"
-		elif line.startswith("A"):			# Added
-			return "\033[1;32m" + line + "\033[m"
-		elif line.startswith("C"):			# Conficted
-			return "\033[0;31m" + line + "\033[m"
-		elif line.startswith("D"):			# Deleted
-			return "\033[1;31m" + line + "\033[m"
-		elif line.startswith("I"):			# Ignored
-			return "\033[0;37m" + line + "\033[m"
-		elif line.startswith("M"):			# Modified
-			return "\033[1;33m" + line + "\033[m"
-		elif line.startswith("U"):			# Updated
-			return "\033[1;33m" + line + "\033[m"
-		elif line.startswith("G"):			# merGed
-			return "\033[1;34m" + line + "\033[m"
-		elif line.startswith("!"):			# missing (!)
-			return "\033[1;31m" + line + "\033[m"
-		elif line.startswith("E"):			# Existed
-			return "\033[0;31m" + line + "\033[m"
-		elif line.startswith("R"):			# Replaced
-			return "\033[0;35m" + line + "\033[m"
+def get_status_line_formatter_for(svn_operation):
 
-	# fallback: leave as is
-	return line
+    re_status = "^([ ACDIMRX\?!~])[ CM][ L][ +][ SX][ K][ C]"
+
+    if svn_operation == "status":
+        pass
+    elif svn_operation == "update":
+        re_status = "^([ AUGCDIMRX!~])[ UCM].." #FIXME: what are the columns 3 and 4
+    elif svn_operation == "patch":
+        re_status = "^([ ADUCG>])" #FIXME what are the other colums ?
+    elif svn_operation == "log":
+        re_status = "^   ([AUDMR])"
+    elif svn_operation == "checkout":
+        re_status = "^([A ])[ U]"          #FIXME could we do something else than 'A'dd?
+
+    def format_status_line(line):
+
+            result = re.search(re_status,line)
+            
+            if result is not None: # is that a "status line"
+                    char = result.group(1)
+                    
+                    if char == "?":			# non version control (?)
+                            #return Pref.get(Pref.CLR_UNVERSIONED) + line + Pref.get(Pref.CLR_RST)
+                            return "\033[1;34m" + line + "\033[m"
+                    elif char == "A":			# Added
+                            return "\033[1;32m" + line + "\033[m"
+                    elif char == "C":			# Conficted
+                            return "\033[0;31m" + line + "\033[m"
+                    elif char == "D":			# Deleted
+                            return "\033[1;31m" + line + "\033[m"
+                    elif char == "I":			# Ignored
+                            return "\033[0;37m" + line + "\033[m"
+                    elif char == "M":			# Modified
+                            return "\033[1;33m" + line + "\033[m"
+                    elif char == "U":			# Updated
+                            return "\033[1;33m" + line + "\033[m"
+                    elif char == "G":			# merGed
+                            return "\033[1;34m" + line + "\033[m"
+                    elif char == "!":			# missing (!)
+                            return "\033[1;31m" + line + "\033[m"
+                    elif char == "E":			# Existed
+                            return "\033[0;31m" + line + "\033[m"
+                    elif char == "R":			# Replaced
+                            return "\033[0;35m" + line + "\033[m"
+
+            # fallback: leave as is
+            return line
+
+    return format_status_line
+
 
 def format_diff_line(line):
 	if line.startswith("+") or line.startswith(">") or line.startswith("+++ "): #new
@@ -158,7 +182,7 @@ def format_log_line(line):
 	elif re.match("^r\d+\s+\|\s+", line):		# summary line, TODO: improve this
 		return "\033[1;31m" + line + "\033[m"
 	elif line.startswith("   "):			# "Changed path" line (in verbose mode)
-		return "   " + format_status_line(line.lstrip())
+                return get_status_line_formatter_for("log")(line)
 	else:
 		return line
 
@@ -234,10 +258,10 @@ def run_single_svn_operation(svn_operation, svn_options, svn_output, svn_error, 
 	if colorize:
 		err_formater = stderr_formater
                 if svn_operation in [ "status", "update", "add", "delete", "mkdir", "move", "checkout", "merge", "patch" ]:
-			formater = format_status_line
+			formater = get_status_line_formatter_for(svn_operation)
 		elif svn_operation == "diff":
 			if '--summarize' in svn_options:
-				formater = format_status_line
+				formater = get_status_line_formatter_for("diff-summarize")
 			else:
 				formater = format_diff_line
 		elif svn_operation == "log":
@@ -301,7 +325,7 @@ def alias_updateverbose(svn_args, svn_output, svn_error, colorize):
 
 	if colorize:
 		err_formater = stderr_formater
-		formater = format_status_line
+		formater = get_status_line_formatter_for("update")
 		
 	ret = run_svn_op(formater, err_formater, svn_output, svn_error, ["update"] + svn_args)
 
@@ -362,7 +386,14 @@ BUILTIN_ALIASES["cix"] = alias_commitextended
 def alias_logdiff(svn_args, svn_output, svn_error, colorize):
 	formater = err_formater = noop_formater
 	
-	old_rev = get_current_rev(svn_args)
+        svn_args_log = svn_args
+        svn_args_diff = svn_args
+
+        # remove some args which are "svn log" specific
+        for opt in ('-q', '--quiet','--stop-on-copy','-v','--verbose'):
+            if opt in svn_args_diff:
+                svn_args_diff.remove(opt)
+
 
 	if colorize:
 		err_formater = stderr_formater
@@ -393,7 +424,7 @@ BUILTIN_ALIASES["ld"] = alias_logdiff
 #	formater = err_formater = lambda(l): l # no color
 #	if colorize:
 #		err_formater = stderr_formater
-#		formater = format_status_line
+#		formater = get_status_line_formatter_for("status")
 #		
 #	run_svn_op(formater, err_formater, svn_output, svn_error, ["status"] + svn_args[1:])
 #
