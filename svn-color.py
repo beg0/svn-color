@@ -126,6 +126,8 @@ def get_status_line_formatter_for(svn_operation):
         re_status = "^   ([AUDMR])"
     elif svn_operation == "checkout":
         re_status = "^([A ])[ U]"          #FIXME could we do something else than 'A'dd?
+    elif svn_operation == "add":
+        re_status = "^([A ])[ U].(\\(bin\\))?"          #FIXME could we do something else than 'A'dd?
 
     def format_status_line(line):
 
@@ -183,6 +185,8 @@ def format_log_line(line):
 		return "\033[1;31m" + line + "\033[m"
 	elif line.startswith("   "):			# "Changed path" line (in verbose mode)
                 return get_status_line_formatter_for("log")(line)
+        elif line.startswith("Index: "):
+            return format_diff_line(line)
 	else:
 		return line
 
