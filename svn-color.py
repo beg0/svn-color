@@ -25,6 +25,8 @@ import StringIO, pipes, shlex
 import ConfigParser
 import collections
 
+from svncolor import coloransi
+
 SVN_BIN='/usr/bin/svn'
 SVN_CONFIG_DIR=os.path.expanduser('~/.subversion')
 
@@ -185,10 +187,24 @@ def format_log_line(line):
 		return "\033[1;31m" + line + "\033[m"
 	elif line.startswith("   "):			# "Changed path" line (in verbose mode)
                 return get_status_line_formatter_for("log")(line)
-        elif line.startswith("Index: "):
-            return format_diff_line(line)
 	else:
 		return line
+
+class LogDiffFormater:
+    """ Statefull formatter for 'svn log --diff' """
+    def __init__(self):
+        self.inDiff = False
+
+    def __call__(self, line):
+        if self.inDiff == True and re.match("^-{3,}$",line):
+            self.inDiff = False
+        elif self.inDiff == False and line.startswith("Index: "):
+            self.inDiff = True
+
+        if self.inDiff:
+            return format_diff_line(line)
+        else:
+            return format_log_line(line)
 
 def format_blame_line(line):
 	return re.sub("(\\s*\\d+\\s*)([\\w\\d_-]+)","\033[0;33m\\1\033[0;32m\\2\033[m",line,1)
@@ -203,7 +219,7 @@ def format_info_line(line):
 def noop_formater(line):
 	return line
 
-def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args):
+def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args,**kwargs):
 	svn_cmd_line = [SVN_BIN] + svn_args
 	
 	stdout_dest = fd_out
@@ -216,7 +232,7 @@ def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args):
 
 
 	if formater:
-		svn_process=subprocess.Popen(svn_cmd_line, stdout=stdout_dest, stderr=stderr_dest)
+		svn_process=subprocess.Popen(svn_cmd_line, stdout=stdout_dest, stderr=stderr_dest,**kwargs)
 		try:
 			fd_to_watch = []
 			if stdout_dest == subprocess.PIPE:
@@ -269,7 +285,10 @@ def run_single_svn_operation(svn_operation, svn_options, svn_output, svn_error, 
 			else:
 				formater = format_diff_line
 		elif svn_operation == "log":
-			formater = format_log_line
+                        if '--diff' in svn_options:
+                            formater =  LogDiffFormater()
+                        else:
+                            formater = format_log_line
 		elif svn_operation == "blame":
 			formater = format_blame_line
 		elif svn_operation == "info":
@@ -572,7 +591,7 @@ if __name__ == '__main__':
 		err_formater = lambda(l): l
 
 	try:
-		if hasattr(svn_operation,'__call__'):
+		if callable(svn_operation):
 			svn_operation(svn_options, svn_output, svn_error, colorize)
 		else:
 			run_single_svn_operation(svn_operation,  svn_options, svn_output, svn_error, colorize)
