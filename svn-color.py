@@ -572,7 +572,7 @@ if __name__ == '__main__':
 		err_formater = lambda(l): l
 
 	try:
-		if hasattr(svn_operation,'__call__'):
+		if callable(svn_operation):
 			svn_operation(svn_options, svn_output, svn_error, colorize)
 		else:
 			run_single_svn_operation(svn_operation,  svn_options, svn_output, svn_error, colorize)
