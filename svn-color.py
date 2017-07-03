@@ -185,10 +185,24 @@ def format_log_line(line):
 		return "\033[1;31m" + line + "\033[m"
 	elif line.startswith("   "):			# "Changed path" line (in verbose mode)
                 return get_status_line_formatter_for("log")(line)
-        elif line.startswith("Index: "):
-            return format_diff_line(line)
 	else:
 		return line
+
+class LogDiffFormater:
+    """ Statefull formatter for 'svn log --diff' """
+    def __init__(self):
+        self.inDiff = False
+
+    def __call__(self, line):
+        if self.inDiff == True and re.match("^-{3,}$",line):
+            self.inDiff = False
+        elif self.inDiff == False and line.startswith("Index: "):
+            self.inDiff = True
+
+        if self.inDiff:
+            return format_diff_line(line)
+        else:
+            return format_log_line(line)
 
 def format_blame_line(line):
 	return re.sub("(\\s*\\d+\\s*)([\\w\\d_-]+)","\033[0;33m\\1\033[0;32m\\2\033[m",line,1)
@@ -269,7 +283,10 @@ def run_single_svn_operation(svn_operation, svn_options, svn_output, svn_error, 
 			else:
 				formater = format_diff_line
 		elif svn_operation == "log":
-			formater = format_log_line
+                        if '--diff' in svn_options:
+                            formater =  LogDiffFormater()
+                        else:
+                            formater = format_log_line
 		elif svn_operation == "blame":
 			formater = format_blame_line
 		elif svn_operation == "info":
