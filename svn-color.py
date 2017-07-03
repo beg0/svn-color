@@ -203,7 +203,7 @@ def format_info_line(line):
 def noop_formater(line):
 	return line
 
-def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args):
+def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args,**kwargs):
 	svn_cmd_line = [SVN_BIN] + svn_args
 	
 	stdout_dest = fd_out
@@ -216,7 +216,7 @@ def run_svn_op(formater, err_formater, fd_out, fd_err, svn_args):
 
 
 	if formater:
-		svn_process=subprocess.Popen(svn_cmd_line, stdout=stdout_dest, stderr=stderr_dest)
+		svn_process=subprocess.Popen(svn_cmd_line, stdout=stdout_dest, stderr=stderr_dest,**kwargs)
 		try:
 			fd_to_watch = []
 			if stdout_dest == subprocess.PIPE:
