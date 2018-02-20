@@ -502,7 +502,7 @@ if __name__ == '__main__':
 	user_aliases.read(os.path.join(SVN_CONFIG_DIR,'aliases'))
 
 	#resolve alias
-	if user_aliases.has_option("aliases",svn_operation):
+	while user_aliases.has_option("aliases",svn_operation):
                 alias = user_aliases.get("aliases",svn_operation)
 
                 if alias is None:
@@ -517,7 +517,7 @@ if __name__ == '__main__':
                     sys.exit(1)
 
                 svn_operation = new_svn_operation
-                svn_options = svn_options + new_svn_options
+                svn_options = new_svn_options + svn_options
 
 	if BUILTIN_ALIASES.has_key(svn_operation):
 		svn_operation = BUILTIN_ALIASES[svn_operation]
